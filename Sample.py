@@ -9,22 +9,20 @@ Call Module(function):
 Counter.py (nfev_counter, ngrad_counter)
 Sample.py
 """
-import History_Manager
 
-def evaluate(obj_fun, x, iter, stage, history):
-    obj = obj_fun(x)
-    history.add_history(x, obj, iter, stage)
-    return obj
-
-def sample(obj_fun, x, method_direct_search, method, iter, stage, history):
+def Sample_Direction(x, method_search, stage, history):
     results = []
-    if method_direct_search == 'orthogonal' and stage == 'DS':
-        # TODO:points = 
+    if method_search == 'orthogonal' and stage == 'DS':
+        # TODO: 
+        directions = []
         pass
+    elif method_search == 'uniform':
+        # TODO: 
+        directions = []
     else:
-        # TODO:points = 
         pass
-    for x in points:
-        result = evaluate(obj_fun, x, stage, iter, history)
-        results.append(result)
     return results
+
+def Sample_Point(x, method_search, stage, iter, history):
+    # TODO:
+    return points

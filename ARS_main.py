@@ -14,7 +14,6 @@ class ARS:
         self.method = method if method else {}
         self.options = options if options else {}
     def fill_options(self):
-        # TODO: Implement the logic to fill the options dictionary
         self.tol = self.options.get('tol', 1e-4)
         self.max_iter = self.options.get('max_iter', 100)
         self.tr_init_radius = self.options.get('initial_trust_radius', 1.0)
