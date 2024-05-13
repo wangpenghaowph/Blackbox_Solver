@@ -15,9 +15,9 @@ import Sample
 def Construct_Model(x, directions, history, iter):
     # TODO: Define how the model is constructed
     if method_construct_model == 'linear':
-        c = Linear_Model(directions, trust_radius, nfev_counter)
+        pass
     if method_construct_model == 'quadratic':
-        Q = Quadratic_Model(directions, trust_radius, nfev_counter)
+        pass
     # define a local model function
     def local_model(x):
         pass 

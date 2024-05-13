@@ -1,4 +1,4 @@
-def Solve_TR(model, x, history, iter):
+def Solve_TR(model, x, option_tr, history):
     # Solve the trust region problem using the given model
-    # TODO: Define how the trust region problem is solved
-    return x  # Example: return new candidate point
+    # TODO: 
+    return sol
