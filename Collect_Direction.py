@@ -24,6 +24,6 @@ def Collect_Direction(x, iter, mgs, history):
         # TODO: Estimate Gradient
     if n_all:
         # TODO:
-    # Add other directions based on direct search or other heuristics
-    # TODO: Define how other directions are collected
+        # Add other directions based on direct search or other heuristics
     return directions
+
