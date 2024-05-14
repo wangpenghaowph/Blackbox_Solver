@@ -1,14 +1,12 @@
-def Solve_TR(model, n, tr_radius, method_solve_tr):
-    # Solve the trust region problem using the given model
-    # Model is a quadratic function, dimension is n
-    # TODO: 
+def solve_tr(model, n, tr_radius, method_solve_tr):
+    tr_sol = []
     if method_solve_tr == 'dogleg':
-        tr_sol = []
+        # TODO: Implement dogleg method
         pass
     elif method_solve_tr == 'cauchy_point':
-        tr_sol = []
+        # TODO: Implement cauchy point method
         pass
     elif method_solve_tr == 'tcg':
-        tr_sol = []
+        # TODO: Implement truncated conjugate gradient method
         pass
     return tr_sol
