@@ -9,7 +9,7 @@ Functions in this module:
 import numpy as np
 
 class History_Manager:
-    def __init__(self, obj_fun, grad_fun=None):
+    def __init__(self, obj_fun, grad_fun):
         self.obj_fun = obj_fun
         self.grad_fun = grad_fun if grad_fun else None
         self.total_history = {}
@@ -26,7 +26,7 @@ class History_Manager:
     def record_results(self, x, obj_values, iter, stage):
         # 把x转化为嵌套向量
         x = np.atleast_2d(x)
-        obj_values = np.array(obj_values)
+        obj_values = np.atleast_1d(obj_values)
         
         if (iter, stage) not in self.total_history:
             self.total_history[(iter, stage)] = {
@@ -66,7 +66,7 @@ class History_Manager:
         
         self.iter_history[iter] = best_entry
         return best_entry
-    
+        
     def evaluate_grad(self, x):
         if self.grad_fun:
             grad = self.grad_fun(x)
@@ -85,5 +85,3 @@ class History_Manager:
     def get_ngrad(self):
         return self.ngrad
     
-    def get_current_params(self):
-        return self.params

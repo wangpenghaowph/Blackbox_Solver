@@ -1,5 +1,4 @@
 from History_Manager import History_Manager
-import Sample
 import Construct_Model
 import Collect_Direction
 import Solve_TR
@@ -17,7 +16,7 @@ class ARS:
         self.n = len(x0)
         self.obj_fun = obj_fun
         self.grad_fun = grad_fun if grad_fun else None
-        self.history = History_Manager()
+        self.history = History_Manager(self.obj_fun, self.grad_fun)
         self.iter = 0
         self.method = method if method else 'Fixed_Dimension'
         self.options = options if options else {}
@@ -52,7 +51,7 @@ class ARS:
             'ds_dec': self.options.get('ds_dec', 0.5)
         }
         self.method_collect_direction = self.options.get('method_collect_direction', 'Centered_Uniform')
-        self.method_direct_search = self.options.get('method_direct_search', 'Uniform')
+        #self.method_direct_search = self.options.get('method_direct_search', 'Uniform')
         self.method_construct_model = self.options.get('method_construct_model', 'Quadratic')
         self.method_solve_tr = self.options.get('method_solve_tr', 'Dogleg')
         self.num_directions = self.options.get('num_directions', [1, 1, self.n, 0, 0])
@@ -94,26 +93,28 @@ class ARS:
         """
         if rho < self.tr_acceptance_threshold[0]:
             self.tr_flag = 0
-            self.tr_radius = max(self.tr_min_radius, self.tr_radius * self.tr_dec)  
+            self.tr_radius = max(self.tr_params['tr_min_radius'], self.tr_radius * self.tr_params['tr_dec'])  
         elif rho > self.tr_acceptance_threshold[1]:
             self.tr_flag = 1
-            self.tr_radius = min(self.tr_max_radius, self.tr_radius * self.tr_inc)
+            self.tr_radius = min(self.tr_params['tr_max_radius'], self.tr_radius * self.tr_params['tr_inc'])
         #print(f"TR flag set to: {self.tr_flag}")
             
     # update grad stepsize
-    def check_and_update_grad_stepsize(self, obj_values):
+    def check_and_update_grad_stepsize(self):#TODO:
         self.grad_stepsize = self.grad_stepsize
     # check ds flag and update ds stepsize
     def check_and_update_ds(self, obj_values):
+        if obj_values is None:
+            return
         curr_obj = obj_values[0]
         smaller_than_first = obj_values[1:] < curr_obj
         proportion = np.sum(smaller_than_first) / len(smaller_than_first)
         if proportion == 0:
             self.ds_flag = 0
-            self.ds_stepsize = max(self.ds_min_stepsize, self.ds_stepsize * self.ds_dec)
+            self.ds_stepsize = max(self.ds_params['ds_min_stepsize'], self.ds_stepsize * self.ds_params['ds_dec'])
         elif proportion > 0.3: #TODO:add an option for this threshold
             self.ds_flag = 0
-            self.ds_stepsize = min(self.ds_max_stepsize, self.ds_stepsize * self.ds_inc)
+            self.ds_stepsize = min(self.ds_params['ds_max_stepsize'], self.ds_stepsize * self.ds_params['ds_inc'])
         #print(f"DS flag set to: {self.ds_flag}")
             
     def ARS_run(self):
@@ -122,30 +123,40 @@ class ARS:
             self.history.record_params(self.iter, self.tr_radius, self.grad_stepsize, self.ds_stepsize)
             directions = self.collect_direction(self.x, self.iter, self.num_directions, self.history)
             model, n = self.construct_model(self.x, self.obj_fun, directions, self.method_construct_model, self.iter, self.history)
+            #print(f'model value at x is {model(self.x)}')
             tr_sol = self.solve_tr(model, n, self.tr_radius, self.method_solve_tr)
             # the original point is self.x + the linear combination of the directions with the coefficients in tr_sol
             # self.x is a np.array, tr_sol['point'] is a np.array, directions is a np.array with each element is a np.array
-            tr_original_sol = self.x + np.dot(tr_sol, directions)
-            tr_obj = self.obj_fun(tr_original_sol)
-            self.history.record_results(tr_original_sol, tr_obj, self.iter, 'TR')
-            best_entry = self.history.find_best_per_iter(self.iter)['point']
+            #print(f'x is {self.x}')
+            #print(f'tr_sol is {tr_sol}')
+            #print(f'directions is {directions}')
+            tr_back_sol = self.x + np.dot(tr_sol, directions)
+            tr_obj = self.obj_fun(tr_back_sol)
+            #print(f'tr_back_sol is {tr_back_sol}, type is {type(tr_back_sol)}')
+            #print(f'tr_obj is {tr_obj}, type is {type(tr_obj)}')
+            self.history.record_results(tr_back_sol, tr_obj, self.iter, 'TR')
+            best_entry = self.history.find_best_per_iter(self.iter)
             # update ds stepsize
-            self.check_and_update_ds(self.history.total_history[(self.iter,'DS')]['objective'])
+            ds_obj = self.history.total_history.get((self.iter,'DS'), None)
+            self.check_and_update_ds(ds_obj)
             # update tr radius
-            rho = (self.history.iter_history[self.iter-1]['objective'] - tr_obj) / (model(self.x) - model(best_entry['point']))
-            self.check_and_update_tr_radius(rho)
+            if self.iter > 0:
+                rho = (self.history.iter_history[self.iter-1]['objective'] - tr_obj) / (model(self.x) - model(best_entry['point']))
+                self.check_and_update_tr_radius(rho)
             # update grad stepsize
-            self.check_and_update_grad_stepsize()
-
+            self.check_and_update_grad_stepsize()#TODO:
+            #print(f'best entry is {best_entry}, type of best entry is {type(best_entry)}')
+            #print(f'best_entry is {best_entry["point"]}') #TODO: delete
             self.x = best_entry['point']
             self.iter += 1
-
+        #print(f'iter history is {self.history.iter_history}')
+        #print(f'last solution is {self.history.iter_history[self.iter-1]}')
         Solution={
-            'solution': self.history.iter_history[-1]['point'],
-            'Objective': self.history.iter_history[-1]['objective'],
+            'solution': self.history.iter_history[self.iter-1]['point'],
+            'Objective': self.history.iter_history[self.iter-1]['objective'],
             'niter': self.iter,
-            'nfev': self.history.get_nfev,
-            'ngrad': self.history.get_ngrad,
+            'nfev': self.history.get_nfev(),
+            'ngrad': self.history.get_ngrad(),
             'status': self.status,
             'fhist': [self.history.iter_history[i]['objective'] for i in range(len(self.history.iter_history))],
         }

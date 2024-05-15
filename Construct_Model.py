@@ -3,7 +3,7 @@ import math
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 
-def construct_model(x, obj_fun, directions, method_construct_model, iter, history):
+def Construct_Model(x, obj_fun, directions, method_construct_model, iter, history):
     """
     # Input:
     x: the current point
@@ -43,10 +43,13 @@ def construct_model(x, obj_fun, directions, method_construct_model, iter, histor
         poly = PolynomialFeatures(degree=2)
         x_poly = poly.fit_transform([x_projected])
         regressor = LinearRegression().fit(poly.fit_transform(x_projected.reshape(1, -1)), obj_values)
-        return regressor.predict(x_poly)[0]
+        #return regressor.predict(x_poly)[0]
 
-    if method_construct_model == 'quadratic':
-        return quadratic_model, n
+    def model(x):
+        return x[0]
+
+    if method_construct_model == 'Quadratic':
+        return model, n
     else:
         raise ValueError(f"Unknown method_construct_model: {method_construct_model}")
 
