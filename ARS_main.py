@@ -16,7 +16,7 @@ class ARS:
         self.n = len(x0)
         self.obj_fun = obj_fun
         self.grad_fun = grad_fun if grad_fun else None
-        self.history = History_Manager(self.obj_fun, self.grad_fun)
+        self.history = History_Manager(x0,self.obj_fun, self.grad_fun)
         self.iter = 0
         self.method = method if method else 'Fixed_Dimension'
         self.options = options if options else {}
@@ -54,7 +54,7 @@ class ARS:
         #self.method_direct_search = self.options.get('method_direct_search', 'Uniform')
         self.method_construct_model = self.options.get('method_construct_model', 'Quadratic')
         self.method_solve_tr = self.options.get('method_solve_tr', 'Dogleg')
-        self.num_directions = self.options.get('num_directions', [2, 3, self.n, 3, 1])
+        self.num_directions = self.options.get('num_directions', [1, 1, self.n, 0, 0])
         self.tr_acceptance_threshold = self.options.get('tr_acceptance_threshold', [0.3, 0.7])
         self.threshold=[]
         # initialize tr radius, grad stepsize, ds stepsize
@@ -103,9 +103,10 @@ class ARS:
     def check_and_update_grad_stepsize(self):#TODO:
         self.grad_stepsize = self.grad_stepsize
     # check ds flag and update ds stepsize
-    def check_and_update_ds(self, obj_values):
-        if obj_values is None:
+    def check_and_update_ds(self, ds_history):
+        if ds_history is None:
             return
+        obj_values = ds_history['objective']
         curr_obj = obj_values[0]
         smaller_than_first = obj_values[1:] < curr_obj
         proportion = np.sum(smaller_than_first) / len(smaller_than_first)
@@ -138,8 +139,8 @@ class ARS:
             self.history.record_results(tr_back_sol, tr_obj, self.iter, 'TR')
             best_entry = self.history.find_best_per_iter(self.iter)
             # update ds stepsize
-            ds_obj = self.history.total_history.get((self.iter,'DS'), None)
-            self.check_and_update_ds(ds_obj['objective'])
+            ds_history = self.history.total_history.get((self.iter,'DS'), None)
+            self.check_and_update_ds(ds_history)
             # update tr radius
             if self.iter > 0:
                 rho = (self.history.iter_history[self.iter-1]['objective'] - tr_obj) / (model(self.x) - model(best_entry['point']))
@@ -159,6 +160,6 @@ class ARS:
             'nfev': self.history.get_nfev(),
             'ngrad': self.history.get_ngrad(),
             'status': self.status,
-            'fhist': [self.history.iter_history[i]['objective'] for i in range(len(self.history.iter_history))],
+            'fhist': [self.history.iter_history[i]['objective'] for i in range(-1,len(self.history.iter_history)-1)],
         }
         return Solution, self.history

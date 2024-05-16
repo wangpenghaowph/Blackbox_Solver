@@ -10,23 +10,28 @@ def SPSA(x, n_f, iter, history):
     obj_fun = history.obj_fun
     grad_stepsize = history.params[iter]['grad_stepsize']
     grads = []
+    x_sample = []
+    obj_value = []
     for _ in range(n_f):
         z = np.random.normal(0, 1, size=len(x))
 
         # First function evaluation
         x_sample1 = x + grad_stepsize * z
         obj1 = obj_fun(x_sample1)
-        history.record_results(x_sample1, obj1, iter, 'EG')
+        x_sample.append(x_sample1)
+        obj_value.append(obj1)
 
         # Second function evaluation
         x_sample2 = x - grad_stepsize * z
         obj2 = obj_fun(x_sample2)
-        history.record_results(x_sample2, obj2, iter, 'EG')
+        x_sample.append(x_sample1)
+        obj_value.append(obj1)
+
         grad = (obj1 - obj2) / (2 * grad_stepsize) * z
         grads.append(grad)
 
     grads = np.array(grads)
-    return np.mean(grads,axis=0)
+    return np.mean(grads,axis=0),np.array(x_sample),np.array(obj_value)
 
 
 
@@ -54,13 +59,14 @@ def Collect_Momentum(iter, history, n_m):
     """
     Collect_Momentum
     """
-    if iter == 0 or iter == 1:
+    if iter == 0 :
         return None
     
     momentums = []
     for i in range(1,n_m+1):
-        if iter-i >= 1:
+        if iter-i >= 0:
             momentums.append(history.iter_history[iter-i-1]['point']-history.iter_history[iter-i]['point'])
+        else:break
     return np.array(momentums)
 
 
@@ -73,8 +79,9 @@ def Collect_Gradient(x, iter, history, n_g, n_f):
     # history.record_results(x_sample.T, obj_values, iter, 'EG')
     grads = []
     for _ in range(n_g):
-        grad = SPSA(x, n_f, iter, history)
+        grad,x_sample,obj_value = SPSA(x, n_f, iter, history)
         grads.append(grad)
+        history.record_results(x_sample, obj_value, iter, 'EG')
     return np.array(grads)
 
 

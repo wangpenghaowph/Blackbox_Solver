@@ -9,11 +9,11 @@ Functions in this module:
 import numpy as np
 
 class History_Manager:
-    def __init__(self, obj_fun, grad_fun):
+    def __init__(self,starting_point, obj_fun, grad_fun):
         self.obj_fun = obj_fun
         self.grad_fun = grad_fun if grad_fun else None
         self.total_history = {}
-        self.iter_history = {}
+        self.iter_history = {-1:{"point": starting_point, "objective": self.obj_fun(starting_point), "stage": 'init'}}
         self.params = {}
         self.ngrad = 0
     # stage is in ['EG',DS','CM','TR'] (Estimate Gradient, Direct Search, Construct Model, TR_sol)

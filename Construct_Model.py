@@ -24,11 +24,13 @@ def Construct_Model(x, obj_fun, directions, method_construct_model, iter, histor
     norm_directions = directions / np.linalg.norm(directions, axis=1)[:, np.newaxis]
 
     # Calculate the number of required samples
-    num_samples_per_direction = math.ceil((m+1)*(m+2) / (2*m))
-
+    #num_samples_per_direction = math.ceil((m+1)*(m+2) / (2*m))
+    # TODO: hstack problem
     # Generate sample points
-    x_sample = np.hstack([x + (i + 1) * radius / (num_samples_per_direction) * norm_directions for i in range(num_samples_per_direction)])
-    x_sample = np.hstack((x, x_sample))  # Ensure the first sample point is x
+    #x_sample = np.hstack([x + (i + 1) * radius / (num_samples_per_direction) * norm_directions for i in range(num_samples_per_direction)])
+    x_sample = np.hstack([x - (1) * radius * norm_directions])
+    #x_sample = np.hstack((x_sample,[x - (1) * radius * norm_directions]))
+    # x_sample = np.hstack((x, x_sample))  # Ensure the first sample point is x
 
     # Evaluate objective function at sample points
     obj_values = np.apply_along_axis(obj_fun, 0, x_sample)
