@@ -1,5 +1,18 @@
 import numpy as np
 
+def Collect_Momentum(iter, history, n_m):
+    """
+    Collect_Momentum
+    """
+    if iter == 0 or iter == 1:
+        return None
+    
+    momentums = []
+    for i in range(1,n_m+1):
+        if iter-i >= 1:
+            momentums.append(history.iter_history[iter-i]['point']-history.iter_history[iter-i-1]['point'])
+    return np.array(momentums)
+
 def SPSA(x, n_f, iter, history):
     """
     Estimate gradient by SPSA (The method used in MeZO)
@@ -10,30 +23,36 @@ def SPSA(x, n_f, iter, history):
     obj_fun = history.obj_fun
     grad_stepsize = history.params[iter]['grad_stepsize']
     grads = []
-    x_sample = []
-    obj_value = []
     for _ in range(n_f):
         z = np.random.normal(0, 1, size=len(x))
 
         # First function evaluation
         x_sample1 = x + grad_stepsize * z
         obj1 = obj_fun(x_sample1)
-        x_sample.append(x_sample1)
-        obj_value.append(obj1)
+        history.record_results(x_sample1, obj1, iter, 'EG')
 
         # Second function evaluation
         x_sample2 = x - grad_stepsize * z
         obj2 = obj_fun(x_sample2)
-        x_sample.append(x_sample1)
-        obj_value.append(obj1)
-
+        history.record_results(x_sample2, obj2, iter, 'EG')
         grad = (obj1 - obj2) / (2 * grad_stepsize) * z
         grads.append(grad)
 
     grads = np.array(grads)
-    return np.mean(grads,axis=0),np.array(x_sample),np.array(obj_value)
+    return np.mean(grads,axis=0)
 
-
+def Collect_Gradient(x, iter, history, n_g, n_f):
+    """
+    Here, we try to use SPSA that is used in MeZO.
+    We can change the function SPSA to other gradient estimator methods.
+    """
+    # x_sample
+    # history.record_results(x_sample.T, obj_values, iter, 'EG')
+    grads = []
+    for _ in range(n_g):
+        grad = SPSA(x, n_f, iter, history)
+        grads.append(grad)
+    return np.array(grads)
 
 def Generate_Random_Directions(x, n_ds_all):
     """
@@ -46,43 +65,11 @@ def Generate_Random_Directions(x, n_ds_all):
     directions /= np.linalg.norm(directions, axis=1)[:, np.newaxis]
     return directions
 
-
-def Choose_DS_Directions(directions,obj_values, n_ds):
+def Choose_best_DS_Directions(directions,obj_values, n_ds):
     """
     Choose n_ds good directions
     """
     return directions
-
-
-
-def Collect_Momentum(iter, history, n_m):
-    """
-    Collect_Momentum
-    """
-    if iter == 0 :
-        return None
-    
-    momentums = []
-    for i in range(1,n_m+1):
-        if iter-i >= 0:
-            momentums.append(history.iter_history[iter-i-1]['point']-history.iter_history[iter-i]['point'])
-        else:break
-    return np.array(momentums)
-
-
-def Collect_Gradient(x, iter, history, n_g, n_f):
-    """
-    Here, we try to use SPSA that is used in MeZO.
-    We can change the function SPSA to other gradient estimator methods.
-    """
-    # x_sample
-    # history.record_results(x_sample.T, obj_values, iter, 'EG')
-    grads = []
-    for _ in range(n_g):
-        grad,x_sample,obj_value = SPSA(x, n_f, iter, history)
-        grads.append(grad)
-        history.record_results(x_sample, obj_value, iter, 'EG')
-    return np.array(grads)
 
 
 def Collect_DS(x, iter, history, n_ds_all, n_ds):
@@ -116,7 +103,7 @@ def Collect_DS(x, iter, history, n_ds_all, n_ds):
     history.record_results(x_sample, obj_values, iter, 'DS')
 
     # choose n_ds good directions
-    directions = Choose_DS_Directions(directions,obj_values, n_ds)
+    directions = Choose_best_DS_Directions(directions,obj_values, n_ds)
 
     return directions
 
@@ -146,7 +133,6 @@ def Collect_Direction(x, iter, num_directions, history):
 
     # Collect the direct search direction
     if n_ds_all > 0 and n_ds > 0:
-        # TODO:
         # Add other directions based on direct search or other heuristics
         ds_direction = Collect_DS(x, iter, history, n_ds_all, n_ds)
     else:
