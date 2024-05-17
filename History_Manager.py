@@ -14,6 +14,7 @@ class History_Manager:
         self.grad_fun = grad_fun if grad_fun else None
         self.total_history = {}
         self.iter_history = {-1:{"point": starting_point, "objective": self.obj_fun(starting_point), "stage": 'init'}}
+        self.pdfo_nfev = []
         self.params = {}
         self.ngrad = 0
     # stage is in ['EG',DS','CM','TR'] (Estimate Gradient, Direct Search, Construct Model, TR_sol)

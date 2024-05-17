@@ -8,11 +8,6 @@ import pycutest
 from pdfo import pdfo
 import sys
 import numpy as np
-os.environ['ARCHDEFS'] = '/home/wangpenghao/cutest/archdefs/'
-os.environ['SIFDECODE'] = '/home/wangpenghao/cutest/sifdecode/'
-os.environ['MASTSIF'] = '/home/wangpenghao/cutest/mastsif/'
-os.environ['CUTEST'] = '/home/wangpenghao/cutest/cutest/'
-os.environ['MYARCH'] = 'pc64.lnx.gfo'
 def pdfo_run(problem_name, ratio = 500):
     problem = pycutest.import_problem(problem_name)
     maxfev = ratio * problem.n

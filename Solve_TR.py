@@ -2,7 +2,7 @@ import numpy as np
 
 def Solve_TR(model, n, tr_radius, method_solve_tr, H = None, g = None):
     tr_sol = []
-    if method_solve_tr == 'dogleg' and H is not None and g is not None:
+    if method_solve_tr == 'Dogleg' and H is not None and g is not None:
         # dogleg : to solve the TR subproblem
         pB = -np.dot(np.linalg.inv(H), g)  # the global minimal
         pU = -(g.T @ g) / (g.T @ H @ g) * g  # the gradient decent direction minimal
@@ -25,7 +25,7 @@ def Solve_TR(model, n, tr_radius, method_solve_tr, H = None, g = None):
         # TODO: Implement truncated conjugate gradient method
         pass
 
-    tr_sol = np.ones(n)
+    #tr_sol = np.ones(n)
     return tr_sol
 
 Solve_TR([],[],1,'dogleg',H=np.diag(np.ones(3)),g=np.ones(3))
