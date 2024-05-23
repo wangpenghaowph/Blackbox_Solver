@@ -3,6 +3,9 @@ from Construct_Model import Construct_Model
 from Solve_TR import Solve_TR
 from pdfo import pdfo
 def Solve_Subproblem(x, obj_fun, directions, method_solve_subproblem, iter, history):
+    # normalize directions
+    norm_directions = np.linalg.norm(directions, axis=1)
+    directions = directions / norm_directions[:, None]
     if method_solve_subproblem['method_subproblem'] == 'PDFO':
         def sub_func(alpha):
             return obj_fun(x + np.dot(alpha,directions))
