@@ -24,8 +24,32 @@ def Solve_TR(model, n, tr_radius, method_solve_tr, H = None, g = None):
     elif method_solve_tr == 'tcg':
         # TODO: Implement truncated conjugate gradient method
         pass
+    
+    if method_solve_tr == 'Dogleg' and H is not None and g is not None:
+        epsilon = 1e-4
+        max_iter = self.sub_dim
 
-    #tr_sol = np.ones(n)
+        s = np.zeros((self.sub_dim,1))
+        r = self.g
+        r_norm_0 = np.linalg.norm(r)
+        p = -self.g
+        k = 0
+        while k<max_iter:
+            if p.T@self.H@p <=0:
+                t = solve_for_t(s,p,self.tr_radius)
+                return s + t*p
+            alpha = (r.T@r)/(p.T@self.H@p)
+            s_new = s + alpha*p
+            if np.linalg.norm(s_new) >= self.tr_radius:
+                t = solve_for_t(s,p,self.tr_radius)
+                return s + t*p
+            r_new = r + alpha*(self.H@p)
+            if np.linalg.norm(r_new) < epsilon*r_norm_0:
+                return s_new
+            beta = (r_new.T@r_new)/(r.T@r)
+            p = -r_new + beta*p
+            k += 1
+            s = s_new
+            r = r_new
+        return s
     return tr_sol
-
-Solve_TR([],[],1,'dogleg',H=np.diag(np.ones(3)),g=np.ones(3))

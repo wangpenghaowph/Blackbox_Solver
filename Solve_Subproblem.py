@@ -8,12 +8,13 @@ def Solve_Subproblem(x, obj_fun, directions, method_solve_subproblem, iter, hist
             return obj_fun(x + np.dot(alpha,directions))
         alpha_0 = np.zeros(len(directions))
         options = {
-            'maxiter': 20,
-            'maxfev': 200,
+            'maxiter': 500,
+            'maxfev': 5000,
         }
         result = pdfo(sub_func, alpha_0, method='newuoa', options=options)
         subproblem_sol = result.x
         history.pdfo_nfev.append(result.nfev)
+        history.pdfo_decrease.append(obj_fun(x)-result.fun)
     elif method_solve_subproblem['method_subproblem'] == 'PDFO_Single_Round':
         def sub_func(alpha):
             return obj_fun(x + np.dot(alpha,directions))
@@ -24,6 +25,7 @@ def Solve_Subproblem(x, obj_fun, directions, method_solve_subproblem, iter, hist
         result = pdfo(sub_func, alpha_0, method='newuoa', options=options)
         subproblem_sol = result.x
         history.pdfo_nfev.append(result.nfev)
+        history.pdfo_decrease.append(obj_fun(x)-result.fun)
     elif method_solve_subproblem['method_subproblem'] == 'DRSOM':
         #TODO: how to derive H and g
         model, n = Construct_Model(x, obj_fun, directions, method_solve_subproblem['method_construct_model'], iter, history)

@@ -3,14 +3,16 @@ import Collect_Direction
 import Solve_Subproblem
 
 import numpy as np
+from icecream import ic
+
 class ARS:
     def __init__(
             self,
             x0, 
             obj_fun, 
-            grad_fun, 
-            method, #'Fixed_Dimension' 
-            options,
+            grad_fun=None, 
+            method='Fixed_Dimension', #Default: 'Fixed_Dimension' 
+            options=None,
         ):
         self.x = np.array(x0)
         self.n = len(x0)
@@ -27,6 +29,7 @@ class ARS:
 
     def configure(self):
         self.solver_tol = self.options.get('solver_tol', 1e-6)
+        self.max_nfev = self.options.get('max_nfev', 1000)
         self.max_iter = self.options.get('max_iter', 100)
         self.tr_params = {
             'tr_init_radius': self.options.get('tr_init_radius', 1.0),
@@ -59,9 +62,8 @@ class ARS:
             'method_construct_model': self.options.get('method_construct_model', 'Quadratic'),
             'method_solve_tr': self.options.get('method_solve_tr', 'Dogleg'),
         }
-        self.method_construct_model = self.options.get('method_construct_model', 'Quadratic')
-        self.method_solve_tr = self.options.get('method_solve_tr', 'Dogleg')
-        self.num_directions = self.options.get('num_directions', [1, 1, self.n, 0, 0])
+
+        self.num_directions = self.options.get('num_directions', [1, 1, self.n, 0, 0]) # momentum, gradient, sample for each gradient, all ds, best ds
         # initialize tr radius, grad stepsize, ds stepsize
         self.tr_radius = self.tr_params['tr_init_radius']
         self.grad_stepsize = self.grad_params['grad_init_stepsize']
@@ -146,8 +148,12 @@ class ARS:
             'niter': self.iter,
             'nfev': self.history.get_nfev(),
             'pdfo_nfev': sum(self.history.pdfo_nfev),
+            'pdfo_decrease': self.history.pdfo_decrease,
             'ngrad': self.history.get_ngrad(),
             'status': self.status,
             'fhist': [self.history.iter_history[i]['objective'] for i in range(-1,len(self.history.iter_history)-1)],
+            'total_histoy': self.history.total_history,
+            'iter_history': self.history.iter_history,
+            'params': self.history.params
         }
-        return Solution, self.history
+        return Solution

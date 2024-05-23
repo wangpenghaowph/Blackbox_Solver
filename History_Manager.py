@@ -15,8 +15,21 @@ class History_Manager:
         self.total_history = {}
         self.iter_history = {-1:{"point": starting_point, "objective": self.obj_fun(starting_point), "stage": 'init'}}
         self.pdfo_nfev = []
+        self.pdfo_decrease = []
         self.params = {}
         self.ngrad = 0
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # 删除不可序列化的函数引用
+        del state['obj_fun']
+        del state['grad_fun']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # 需要恢复函数，可以在这里恢复或留给外部处理
+        # self.obj_fun = 外部定义的函数
+        # self.grad_fun = 另一个外部定义的函数
     # stage is in ['EG',DS','CM','TR'] (Estimate Gradient, Direct Search, Construct Model, TR_sol)
     def evaluate(self, x, iter, stage):
         # 把x转化为嵌套向量
@@ -24,7 +37,7 @@ class History_Manager:
         obj_values = [self.obj_fun(xi) for xi in x]
         return obj_values
     
-    def record_results(self, x, obj_values, iter, stage):
+    def record_results(self, x, obj_values, iter, stage)->None:
         # 把x转化为嵌套向量
         x = np.atleast_2d(x)
         obj_values = np.atleast_1d(obj_values)
@@ -47,7 +60,7 @@ class History_Manager:
 
     # Use get_best_iterate after solving the TR problem. To get the best iterate in each iter.
     # return: {"point": a numpy array, "objective": a scalar, "stage": stage}
-    def find_best_per_iter(self, iter):
+    def find_best_per_iter(self, iter)->dict:
         stages = ['EG', 'DS', 'CM', 'TR']
         best_entry = None
         
@@ -68,11 +81,11 @@ class History_Manager:
         self.iter_history[iter] = best_entry
         return best_entry
         
-    def evaluate_grad(self, x):
+    def evaluate_grad(self, x)->np.ndarray:
         if self.grad_fun:
             grad = self.grad_fun(x)
             self.ngrad += 1
-            return grad
+            return np.atleast_1d(grad)
         else:
             raise ValueError("No gradient function provided")
         
