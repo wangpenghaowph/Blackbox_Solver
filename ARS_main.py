@@ -85,9 +85,9 @@ class ARS:
         if self.iter >= self.max_iter:
             self.status = 0
             return True
-        elif relative_diff < self.solver_tol:
-            self.status = 1
-            return True
+        #elif relative_diff < self.solver_tol:
+        #    self.status = 1
+        #   return True
         else:
             return False
     # check and update tr radius
@@ -142,6 +142,7 @@ class ARS:
             self.check_and_update_grad_stepsize()
             self.x = best_entry['point']
             self.iter += 1
+        ic(self.history.pdfo_decrease)
         Solution={
             'solution': self.history.iter_history[self.iter-1]['point'],
             'Objective': self.history.iter_history[self.iter-1]['objective'],
@@ -152,7 +153,7 @@ class ARS:
             'ngrad': self.history.get_ngrad(),
             'status': self.status,
             'fhist': [self.history.iter_history[i]['objective'] for i in range(-1,len(self.history.iter_history)-1)],
-            'total_histoy': self.history.total_history,
+            'total_history': self.history.total_history,
             'iter_history': self.history.iter_history,
             'params': self.history.params
         }

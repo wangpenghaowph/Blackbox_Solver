@@ -1,4 +1,5 @@
 import numpy as np
+from icecream import ic
 
 def Collect_Momentum(iter, history, n_m):
     """

@@ -2,16 +2,21 @@ import numpy as np
 from Construct_Model import Construct_Model
 from Solve_TR import Solve_TR
 from pdfo import pdfo
+from icecream import ic
+
 def Solve_Subproblem(x, obj_fun, directions, method_solve_subproblem, iter, history):
     # normalize directions
     norm_directions = np.linalg.norm(directions, axis=1)
     directions = directions / norm_directions[:, None]
+    sub_dim = len(directions)
+    tr_radius = history.params[iter]['tr_radius']
+    ic(iter, sub_dim, tr_radius)
     if method_solve_subproblem['method_subproblem'] == 'PDFO':
         def sub_func(alpha):
             return obj_fun(x + np.dot(alpha,directions))
-        alpha_0 = np.zeros(len(directions))
+        alpha_0 = np.zeros(sub_dim)
         options = {
-            'maxiter': 500,
+            'radius_init': tr_radius,
             'maxfev': 5000,
         }
         result = pdfo(sub_func, alpha_0, method='newuoa', options=options)
@@ -23,7 +28,8 @@ def Solve_Subproblem(x, obj_fun, directions, method_solve_subproblem, iter, hist
             return obj_fun(x + np.dot(alpha,directions))
         alpha_0 = np.zeros(len(directions))
         options = {
-            'maxiter': 1,
+            'radius_init': tr_radius,
+            'maxfev': 10 * sub_dim,
         }
         result = pdfo(sub_func, alpha_0, method='newuoa', options=options)
         subproblem_sol = result.x
