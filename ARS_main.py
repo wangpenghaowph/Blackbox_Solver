@@ -55,15 +55,14 @@ class ARS:
         }
         self.method_collect_direction = {
             'method_estimation_gradient': self.options.get('method_estimation_gradient', 'Centered'),
-            'method_direct_search': self.options.get('method_direct_search', 'Uniform'),
+            'method_direct_search': self.options.get('method_direct_search', 'Orthogonal'),
         }
         self.method_solve_subproblem = {
             'method_subproblem': self.options.get('method_subproblem', 'PDFO'),
             'method_construct_model': self.options.get('method_construct_model', 'Quadratic'),
-            'method_solve_tr': self.options.get('method_solve_tr', 'Dogleg'),
+            'method_solve_tr': self.options.get('method_solve_tr', 'TCG'),
         }
-
-        self.num_directions = self.options.get('num_directions', [1, 1, self.n, 0, 0]) # momentum, gradient, sample for each gradient, all ds, best ds
+        self.num_directions = self.options.get('num_directions', [1, 1, self.n, 2, 2]) # momentum, gradient, sample for each gradient, all ds, best ds
         # initialize tr radius, grad stepsize, ds stepsize
         self.tr_radius = self.tr_params['tr_init_radius']
         self.grad_stepsize = self.grad_params['grad_init_stepsize']
@@ -98,10 +97,10 @@ class ARS:
         参数:
         rho - 信赖域步长的接受率
         """
-        if rho < self.tr_acceptance_threshold[0]:
+        if rho < self.tr_params['tr_acceptance_threshold'][0]:
             self.tr_flag = 0
             self.tr_radius = max(self.tr_params['tr_min_radius'], self.tr_radius * self.tr_params['tr_dec'])  
-        elif rho > self.tr_acceptance_threshold[1]:
+        elif rho > self.tr_params['tr_acceptance_threshold'][1]:
             self.tr_flag = 1
             self.tr_radius = min(self.tr_params['tr_max_radius'], self.tr_radius * self.tr_params['tr_inc'])
         #print(f"TR flag set to: {self.tr_flag}")
@@ -129,11 +128,9 @@ class ARS:
         Solution = {}
         while not self.Check_Stop_Criteria():
             self.history.record_params(self.iter, self.tr_radius, self.grad_stepsize, self.ds_stepsize)
-            
-            directions = self.collect_direction(self.x, self.iter, self.num_directions, self.history)
-            
-            sol, obj = self.solve_subproblem(self.x, self.obj_fun, directions, self.method_solve_subproblem, self.iter, self.history)
-            #TODO: update tr radius if using DRSOM method, therefore it is defined in Solve_Subproblem module(还没写update tr radius的代码,暂时最好不要用DRSOM方法#TODO:)
+            directions, ds_coordinates = self.collect_direction(self.x, self.num_directions, self.method_collect_direction, self.iter, self.history)
+            rho = self.solve_subproblem(self.x, self.obj_fun, directions, ds_coordinates, self.method_solve_subproblem, self.iter, self.history)
+            self.check_and_update_tr_radius(rho)
             best_entry = self.history.find_best_per_iter(self.iter)
             # update ds stepsize
             ds_history = self.history.total_history.get((self.iter,'DS'), None)

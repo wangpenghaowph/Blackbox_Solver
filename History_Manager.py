@@ -62,7 +62,7 @@ class History_Manager:
     # return: {"point": a numpy array, "objective": a scalar, "stage": stage}
     def find_best_per_iter(self, iter)->dict:
         stages = ['EG', 'DS', 'CM', 'TR']
-        best_entry = None
+        best_entry = self.iter_history[iter-1]
         
         for stage in stages:
             key = (iter, stage)
